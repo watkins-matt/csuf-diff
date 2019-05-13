@@ -1,0 +1,9 @@
+.vscode/ipch/**.ipch
+.vscode/ipch/**.bin
+.vscode/ipch/
+.vscode/**.json
+builddir/**
+grep.pdb
+**.bin
+**.ipch
+example/**
