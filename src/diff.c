@@ -9,16 +9,30 @@
 #include "discrepancy_graph.h"
 
 #define strdup _strdup
+#define strcmpi _strcmpi
 
 void print_seperator()
 {
     printf("===================================\n");
 }
 
+enum COMMAND_FLAGS
+{
+    NONE = 0,
+    VERSION = 1,     // -v --version
+    QUIET_MODE = 2,  // -q --brief
+    REPORT_SAME = 4, // -s Reports if files are the same
+    SIDE_BY_SIDE = 8,
+    LEFT_COLUMN_ONLY = 16,
+    SUPPRESS_COMMON_LINES = 32
+};
+typedef enum COMMAND_FLAGS COMMAND_FLAGS;
+
 struct command_line_options
 {
     char *first_file;
     char *second_file;
+    COMMAND_FLAGS flags;
 };
 typedef struct command_line_options command_line_options;
 
@@ -27,6 +41,7 @@ command_line_options *command_line_options_create(const char *first_file, const 
     command_line_options *options = malloc(sizeof(command_line_options));
     options->first_file = strdup(first_file);
     options->second_file = strdup(second_file);
+    options->flags = 0;
     return options;
 }
 
@@ -35,6 +50,7 @@ command_line_options *command_line_options_create_default()
     command_line_options *options = malloc(sizeof(command_line_options));
     options->first_file = NULL;
     options->second_file = NULL;
+    options->flags = 0;
     return options;
 }
 
@@ -45,12 +61,17 @@ void command_line_options_destroy(command_line_options *options)
     free(options);
 }
 
+void command_line_show_usage_message()
+{
+    printf("[Usage] diff.exe [Options] [First File] [Second File]\n");
+    exit(1);
+}
+
 command_line_options *process_command_line_arguments(int argc, char *argv[])
 {
     if (argc < 3)
     {
-        printf("[Usage] diff.exe [options] [file_a] [file_b]\n");
-        exit(1);
+        command_line_show_usage_message();
     }
 
     // This will not crash because we are guaranteed to have >= 3 arguments.
@@ -59,10 +80,52 @@ command_line_options *process_command_line_arguments(int argc, char *argv[])
     options->first_file = strdup(argv[argc - 2]);
     options->second_file = strdup(argv[argc - 1]);
 
-    //     for (int i = argc-1; i > 1; i--)
-    //     {
-    //         options->second_file = strdup
-    //     }
+    if (options->first_file[0] == '-' || options->second_file[0] == '-')
+    {
+        printf("Invalid files specified, must specify two files as the final two parameters.\n");
+        command_line_show_usage_message();
+    }
+
+    for (int i = 1; i < argc - 2; i++)
+    {
+        const char *argument = argv[i];
+
+        if (strcmpi(argument, "-v") == 0 || strcmpi(argument, "--version") == 0)
+        {
+            options->flags |= VERSION;
+        }
+
+        else if (strcmpi(argument, "-q") == 0 || strcmpi(argument, "--brief") == 0)
+        {
+            options->flags |= QUIET_MODE;
+        }
+
+        else if (strcmpi(argument, "-s") == 0)
+        {
+            options->flags |= REPORT_SAME;
+        }
+
+        else if (strcmpi(argument, "-y") == 0 || strcmpi(argument, "--side-by-side") == 0)
+        {
+            options->flags |= SIDE_BY_SIDE;
+        }
+
+        else if (strcmpi(argument, "--left-column") == 0)
+        {
+            options->flags |= LEFT_COLUMN_ONLY;
+        }
+
+        else if (strcmpi(argument, "--suppress-common-lines ") == 0)
+        {
+            options->flags |= SUPPRESS_COMMON_LINES;
+        }
+
+        else
+        {
+            printf("Invalid argument: %s\n", argument);
+            command_line_show_usage_message();
+        }
+    }
     return options;
 }
 
