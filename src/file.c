@@ -1,10 +1,12 @@
 #include "file.h"
+
+#define _CRT_SECURE_NO_WARNINGS
+#define strdup _strdup
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-
-#define strdup _strdup
 
 void file_print(file *this)
 {
