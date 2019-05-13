@@ -1,3 +1,2 @@
 project('diff', 'c')
-exe = executable('diff', 'src/diff.c')
-test('command line test', exe, args : ['../example/Wiki1.txt', '../example/Wiki2.txt'])
+exe = executable('diff', ['src/diff.c', 'src/discrepancy_graph.c', 'src/discrepancy.c', 'src/file.c', 'src/similarity_graph.c', 'src/similarity.c'])
