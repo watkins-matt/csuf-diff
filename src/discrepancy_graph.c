@@ -14,12 +14,14 @@ discrepancy_graph *discrepancy_graph_create()
 
 void discrepancy_graph_destroy(discrepancy_graph *graph)
 {
-    // BUGBUG: Fix freeing the nodes
-    // for (discrepancy *it = graph->head; it != NULL; it = it->next)
-    // {
+    discrepancy *it = graph->head;
+    while (it != NULL)
+    {
+        discrepancy *temp = it;
+        it = it->next;
+        free(temp);
+    }
 
-    //     free(it);
-    // }
     free(graph);
 }
 

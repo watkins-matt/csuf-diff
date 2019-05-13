@@ -14,11 +14,15 @@ similarity_graph *similarity_graph_create()
 
 void similarity_graph_destroy(similarity_graph *graph)
 {
-    // TODO: Fix freeing the nodes
-    // for (similarity *it = graph->head; it != NULL; it = it->next)
-    // {
-    //     free(it);
-    // }
+    similarity *it = graph->head;
+
+    while (it != NULL)
+    {
+        similarity *temp = it;
+        it = it->next;
+        free(temp);
+    }
+
     free(graph);
 }
 
