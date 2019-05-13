@@ -63,21 +63,6 @@ struct similarity
 };
 typedef struct similarity similarity;
 
-// struct diff {
-//     int line_number;
-//     int lines_to_skip;
-// };
-// typedef struct diff diff;
-
-struct file_diff
-{
-    int diffs[MAX_LINES];
-    int total_lines;
-    struct similarity *first;
-    // similarity shared_lines[MAX_LINES];
-};
-typedef struct file_diff file_diff;
-
 similarity *similarity_create_default()
 {
     similarity *sim = malloc(sizeof(similarity));
@@ -120,69 +105,6 @@ struct coverage_graph
     int longest_match_line_count;
 };
 typedef struct coverage_graph coverage_graph;
-
-void file_diff_destroy(file_diff *diff)
-{
-    diff->first = NULL;
-    free(diff);
-}
-
-void file_diff_print(file *file1, file *file2, file_diff *this)
-{
-    for (int i = 0; i < this->total_lines; i++)
-    {
-        if (this->diffs[i] == i)
-        {
-            printf("%s", file1->lines[i]);
-        }
-
-        else
-        {
-            printf("+%s", file2->lines[i]);
-        }
-
-        // printf("%d\n", this->diffs[i]);
-    }
-}
-
-// file_diff* generate_file_diff(file* first_file, file* second_file)
-// {
-//     int i, j;
-
-//     for (i = j = 0; i < first_file->line_count; i++, j++)
-//     {
-//         if (strcmp(first_file->lines[i], second_file->lines[j]) != 0)
-//         {
-
-//         }
-//     }
-// }
-
-// int file_find_line(file *this, const char *line)
-// {
-//     for (int i = 0; i < this->line_count; i++)
-//     {
-//         if (strcmp(this->lines[i], line) == 0)
-//         {
-//             return i;
-//         }
-//     }
-
-//     return -1;
-// }
-
-// int file_find_line_starting_at(file *this, const char *line, int starting_at)
-// {
-//     for (int i = starting_at; i < this->line_count; i++)
-//     {
-//         if (strcmp(this->lines[i], line) == 0)
-//         {
-//             return i;
-//         }
-//     }
-
-//     return -1;
-// }
 
 int file_find_line(file *this, const char *line, int start_limit, int end_limit)
 {
@@ -235,23 +157,6 @@ int find_longest_match(file *first, file *second, const int line_number, const i
     }
 
     return best_match_line;
-}
-
-file_diff *generate_diff(file *first, file *second)
-{
-    file_diff *differences = malloc(sizeof(file_diff));
-    differences->first = NULL;
-    differences->total_lines = first->line_count;
-
-    for (int i = 0; i < differences->total_lines; i++)
-    {
-        differences->diffs[i] = file_find_line(second, first->lines[i], 0, second->line_count);
-        // differences->diffs[i] =
-        // int longest_match = find_longest_match(first, second, i);
-        // int match_count =
-    }
-
-    return differences;
 }
 
 similarity_graph *similarity_graph_create()
@@ -352,8 +257,7 @@ void similarity_graph_add(similarity_graph *graph, similarity *sim)
     graph->size++;
 }
 
-similarity *find_largest_similarity(file *first, file *second,
-                                    file_diff *differences, int start,
+similarity *find_largest_similarity(file *first, file *second, int start,
                                     int end, int search_start, int search_end)
 {
 
@@ -395,11 +299,10 @@ similarity *find_largest_similarity(file *first, file *second,
     return sim;
 }
 
-similarity_graph *build_graph(file *first, file *second, file_diff *differences,
-                              similarity_graph *graph, int start, int end, int search_start_limit, int search_end_limit)
+similarity_graph *build_graph(file *first, file *second, similarity_graph *graph, int start, int end, int search_start_limit, int search_end_limit)
 {
     similarity *largest_similarity =
-        find_largest_similarity(first, second, differences, start, end, search_start_limit, search_end_limit);
+        find_largest_similarity(first, second, start, end, search_start_limit, search_end_limit);
 
     if (largest_similarity != NULL)
     {
@@ -419,7 +322,7 @@ similarity_graph *build_graph(file *first, file *second, file_diff *differences,
         // Recursively search above the similarity for greatest size matches
         if (before_start_line < before_end_line)
         {
-            graph = build_graph(first, second, differences, graph,
+            graph = build_graph(first, second, graph,
                                 before_start_line, before_end_line, search_start_limit, largest_similarity->line_number);
         }
 
@@ -429,7 +332,7 @@ similarity_graph *build_graph(file *first, file *second, file_diff *differences,
         // Recursively search below the similarity for greatest size matches
         if (after_start_line < after_end_line)
         {
-            graph = build_graph(first, second, differences, graph,
+            graph = build_graph(first, second, graph,
                                 after_start_line, after_end_line, largest_similarity->line_number + largest_similarity->total_lines_matched, search_end_limit);
         }
     }
@@ -437,48 +340,13 @@ similarity_graph *build_graph(file *first, file *second, file_diff *differences,
     return graph;
 }
 
-similarity_graph *generate_graph(file *first, file *second,
-                                 file_diff *differences)
+similarity_graph *generate_graph(file *first, file *second)
 {
     similarity_graph *graph = similarity_graph_create();
-    graph = build_graph(first, second, differences, graph, 0,
-                        differences->total_lines, 0, second->line_count);
+    graph = build_graph(first, second, graph, 0,
+                        first->line_count, 0, second->line_count);
     return graph;
 }
-
-// similarity_graph *generate_graph_alt(file *first, file *second,
-//                                      file_diff *differences)
-// {
-//     similarity_graph *graph = similarity_graph_create();
-
-//     for (int i = 0; i < differences->total_lines; i++)
-//     {
-//         // The line can be found in both the first and the second file
-//         if (differences->diffs[i] != -1)
-//         {
-//             int longest_match = find_longest_match(first, second, i);
-//             int number_of_matching_lines =
-//                 get_matched_line_count(first, second, i, longest_match);
-
-//             // i corresponds to the line in the first file, the match index is
-//             // diffs[i]; we're trying to transform
-//             similarity *sim =
-//                 similarity_create(longest_match, number_of_matching_lines);
-//             similarity_graph_add(graph, sim);
-
-//             // The number of matching lines are accounted for so we can skip
-//             // ahead
-//             // i += number_of_matching_lines - 1;
-//         }
-//     }
-
-//     return graph;
-// }
-
-// similarity_graph *similarity_graph_sort(similarity_graph *graph)
-// {
-//     // int lowest_
-// }
 
 int similarity_print(file *first, file *second, similarity *sim)
 {
@@ -684,24 +552,7 @@ void file_print_discrepancy(file *first, file *second, discrepancy *disc)
     }
 }
 
-// void file_print_discrepancy(file *file, discrepancy *disc)
-// {
-//     for (int i = disc->line_number; i < disc->line_number + disc->total_lines; i++)
-//     {
-//         if (disc->type == Addition)
-//         {
-//             printf("%02d\t>%s", i + 1, file->lines[i]);
-//         }
-
-//         else
-//         {
-//             printf("%02d\t<%s", i + 1, file->lines[i]);
-//         }
-//     }
-// }
-
-discrepancy_graph *generate_discrepancy_graph(file *first, file *second,
-                                              file_diff *first_differences, file_diff *second_differences, similarity_graph *sim_graph)
+discrepancy_graph *generate_discrepancy_graph(file *first, file *second, similarity_graph *sim_graph)
 {
     discrepancy_graph *graph = discrepancy_graph_create();
     int line_number = 0;
@@ -749,20 +600,6 @@ discrepancy_graph *generate_discrepancy_graph(file *first, file *second,
     }
     return graph;
 }
-
-// similarity_graph *similarity_graph_sanity_check(similarity_graph *graph)
-// {
-//     similarity *last = graph->head;
-//     if (last != NULL)
-//     {
-//         for (similarity *sim = last->next; sim != NULL; sim = sim->next)
-//         {
-//             if (last->line_number > sim->line_number)
-
-//             last = sim;
-//         }
-//     }
-// }
 
 struct command_line_options
 {
@@ -891,16 +728,12 @@ int main(int argc, char *argv[])
 
     command_line_options_destroy(options);
 
-    file_diff *first_differences = generate_diff(first, second);
-    file_diff *second_differences = generate_diff(second, first);
-
-    similarity_graph *graph = generate_graph(first, second,
-                                             first_differences);
+    similarity_graph *graph = generate_graph(first, second);
     similarity_graph_print(first, second, graph);
     print_seperator();
     // similarity_graph_print_alt(first, second, graph);
 
-    discrepancy_graph *discrepancy_graph = generate_discrepancy_graph(first, second, first_differences, second_differences, graph);
+    discrepancy_graph *discrepancy_graph = generate_discrepancy_graph(first, second, graph);
     discrepancy_graph_print(first, second, discrepancy_graph);
 
     print_seperator();
@@ -908,9 +741,6 @@ int main(int argc, char *argv[])
 
     discrepancy_graph_destroy(discrepancy_graph);
     similarity_graph_destroy(graph);
-
-    file_diff_destroy(first_differences);
-    file_diff_destroy(second_differences);
 
     file_close(first);
     file_close(second);
