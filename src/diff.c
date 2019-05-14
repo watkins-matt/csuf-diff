@@ -115,7 +115,7 @@ command_line_options *process_command_line_arguments(int argc, char *argv[])
             options->flags |= LEFT_COLUMN_ONLY;
         }
 
-        else if (strcmpi(argument, "--suppress-common-lines ") == 0)
+        else if (strcmpi(argument, "--suppress-common-lines") == 0)
         {
             options->flags |= SUPPRESS_COMMON_LINES;
         }
@@ -159,7 +159,8 @@ void print_diff(file *first, file *second, COMMAND_FLAGS flags, similarity_graph
             int sim_first = sim->line_number <= disc->line_number;
             if (sim_first)
             {
-                file_print_similarity(second, sim);
+                if (!(flags & SUPPRESS_COMMON_LINES))
+                    file_print_similarity(second, sim);
                 line_number += sim->total_lines_matched;
                 sim = sim->next;
             }
@@ -186,7 +187,8 @@ void print_diff(file *first, file *second, COMMAND_FLAGS flags, similarity_graph
         // Only similarities left
         else if (disc == NULL)
         {
-            file_print_similarity(second, sim);
+            if (!(flags & SUPPRESS_COMMON_LINES))
+                file_print_similarity(second, sim);
             line_number += sim->total_lines_matched;
             sim = sim->next;
         }
