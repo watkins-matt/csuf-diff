@@ -19,18 +19,24 @@ void file_print(file *this)
 file *file_open(const char *file_name)
 {
     const int max_line_size =
-        200; // TODO: Allow for variable line sizes using realloc
+        256; // TODO: Allow for variable line sizes using realloc
     char *line_buffer = malloc(max_line_size);
-    file *this = malloc(sizeof(file));
 
+    file *this = malloc(sizeof(file));
     this->line_count = 0;
     this->file_name = strdup(file_name);
-    FILE *file_to_read = fopen(file_name, "r");
 
+    FILE *file_to_read = fopen(file_name, "r");
     while (fgets(line_buffer, max_line_size, file_to_read) != NULL)
     {
         this->lines[this->line_count] = strdup(line_buffer);
         this->line_count++;
+
+        if (this->line_count >= MAX_LINES)
+        {
+            printf("Error, file %s has greater than the maximum number of lines, total lines will be capped.\n", file_name);
+            break;
+        }
     }
 
     fclose(file_to_read);

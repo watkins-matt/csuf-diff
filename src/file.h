@@ -1,7 +1,7 @@
 #ifndef FILE_H
 #define FILE_H
 
-#define MAX_LINES 500
+#define MAX_LINES 1024
 
 struct file
 {
