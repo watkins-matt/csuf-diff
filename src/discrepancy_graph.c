@@ -131,8 +131,8 @@ discrepancy_graph *generate_discrepancy_graph(file *first, file *second, similar
 
         line_number = it->line_number + it->total_lines_matched;
 
-        // Consider the rest of the file to be an addition
-        if (it->next == NULL)
+        // Consider the rest of the file to be an addition if there are greater than zero lines left
+        if (it->next == NULL && (second->line_count - line_number) > 0)
         {
             discrepancy *disc = discrepancy_create(line_number, second->line_count - line_number, Addition);
             discrepancy_graph_add(graph, disc);
