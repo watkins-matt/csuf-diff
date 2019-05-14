@@ -126,11 +126,26 @@ command_line_options *process_command_line_arguments(int argc, char *argv[])
             command_line_show_usage_message();
         }
     }
+
     return options;
 }
 
-void print_diff(file *first, file *second, similarity_graph *sim_graph, discrepancy_graph *disc_graph)
+void print_diff(file *first, file *second, COMMAND_FLAGS flags, similarity_graph *sim_graph, discrepancy_graph *disc_graph)
 {
+    if (flags & QUIET_MODE || flags & REPORT_SAME)
+    {
+        if (flags & REPORT_SAME && disc_graph->size == 0)
+        {
+            printf("Files %s and %s are the same.", first->file_name, second->file_name);
+        }
+
+        else if (disc_graph->size > 0)
+        {
+            printf("Files %s and %s are different.", first->file_name, second->file_name);
+        }
+        return;
+    }
+
     int line_number = 0;
     int total_lines = second->line_count;
 
@@ -186,9 +201,20 @@ void print_diff(file *first, file *second, similarity_graph *sim_graph, discrepa
     }
 }
 
+void command_line_show_version()
+{
+    printf("diff.exe 1.0\n(C)2019 Matt Watkins\nLicensed under the MIT License.");
+    exit(1);
+}
+
 int main(int argc, char *argv[])
 {
     command_line_options *options = process_command_line_arguments(argc, argv);
+
+    if (options->flags & VERSION)
+    {
+        command_line_show_version();
+    }
 
     file *first = file_open(options->first_file);
     file *second = file_open(options->second_file);
@@ -196,14 +222,15 @@ int main(int argc, char *argv[])
     command_line_options_destroy(options);
 
     similarity_graph *graph = generate_graph(first, second);
-    similarity_graph_print(first, second, graph);
-    print_seperator();
 
+    // Test code: do not use in production
+    // similarity_graph_print(first, second, graph);
+    // print_seperator();
     discrepancy_graph *discrepancy_graph = generate_discrepancy_graph(first, second, graph);
-    discrepancy_graph_print(first, second, discrepancy_graph);
+    // discrepancy_graph_print(first, second, discrepancy_graph);
+    // print_seperator();
 
-    print_seperator();
-    print_diff(first, second, graph, discrepancy_graph);
+    print_diff(first, second, options->flags, graph, discrepancy_graph);
 
     discrepancy_graph_destroy(discrepancy_graph);
     similarity_graph_destroy(graph);
