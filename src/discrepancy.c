@@ -8,6 +8,7 @@ discrepancy *discrepancy_create(int line_number, int total_lines, DISCREPANCY_TY
     discrepancy *sim = malloc(sizeof(discrepancy));
     sim->line_number = line_number;
     sim->total_lines = total_lines;
+    sim->source_line_number = line_number;
     sim->type = type;
     sim->next = NULL;
     return sim;
@@ -25,10 +26,10 @@ void file_print_discrepancy(file *first, file *second, discrepancy *disc, int li
         switch (disc->type)
         {
         case Addition:
-            printf("%da%d,%d\n", line_number, disc->line_number, disc->line_number + disc->total_lines);
+            printf("%da%d,%d\n", disc->source_line_number, disc->line_number, disc->line_number + disc->total_lines);
             break;
         case Deletion:
-            printf("%d,%dd%d\n", disc->line_number, disc->line_number + disc->total_lines, line_number);
+            printf("%d,%dd%d\n", disc->line_number, disc->line_number + disc->total_lines, disc->source_line_number);
             break;
         }
     }

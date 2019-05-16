@@ -112,6 +112,7 @@ discrepancy_graph *generate_discrepancy_graph(file *first, file *second, similar
         if (line_number < current_line)
         {
             discrepancy *disc = discrepancy_create(line_number, current_line - line_number, Deletion);
+            disc->source_line_number = current_line;
             discrepancy_graph_add(graph, disc);
         }
 

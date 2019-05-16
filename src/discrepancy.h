@@ -15,6 +15,7 @@ struct discrepancy
 {
     int line_number;
     int total_lines;
+    int source_line_number;
     DISCREPANCY_TYPE type;
 
     struct discrepancy *next;
