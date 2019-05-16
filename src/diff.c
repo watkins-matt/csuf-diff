@@ -52,23 +52,22 @@ void command_line_show_usage_message()
 
 command_line_options *process_command_line_arguments(int argc, char *argv[])
 {
+    // The only case 
+    if (argc == 2 && (strcmpi(argv[1], "-v") == 0 || strcmpi(argv[1], "--version") == 0))
+    {
+        command_line_show_version();
+    }
+
+    // We always must have at least two arguments otherwise
     if (argc < 3)
     {
         command_line_show_usage_message();
     }
 
-    // This will not crash because we are guaranteed to have >= 3 arguments.
-    // The last two arguments will always be the files to process.
+
     command_line_options *options = command_line_options_create_default();
-    options->first_file = strdup(argv[argc - 2]);
-    options->second_file = strdup(argv[argc - 1]);
 
-    if (options->first_file[0] == '-' || options->second_file[0] == '-')
-    {
-        printf("Invalid files specified, must specify two files as the final two parameters.\n");
-        command_line_show_usage_message();
-    }
-
+    // The last two arguments must be the files
     for (int i = 1; i < argc - 2; i++)
     {
         const char *argument = argv[i];
@@ -76,6 +75,7 @@ command_line_options *process_command_line_arguments(int argc, char *argv[])
         if (strcmpi(argument, "-v") == 0 || strcmpi(argument, "--version") == 0)
         {
             options->flags |= VERSION;
+            command_line_show_version();
         }
 
         else if (strcmpi(argument, "-q") == 0 || strcmpi(argument, "--brief") == 0)
@@ -132,6 +132,17 @@ command_line_options *process_command_line_arguments(int argc, char *argv[])
             printf("Invalid argument: %s\n", argument);
             command_line_show_usage_message();
         }
+    }
+
+    // This will not crash because we are guaranteed to have >= 3 arguments.
+    // The last two arguments will always be the files to process.
+    options->first_file = strdup(argv[argc - 2]);
+    options->second_file = strdup(argv[argc - 1]);
+
+    if (options->first_file[0] == '-' || options->second_file[0] == '-')
+    {
+        printf("Invalid files specified, must specify two files as the final two parameters.\n");
+        command_line_show_usage_message();
     }
 
     return options;
@@ -224,11 +235,6 @@ void command_line_show_version()
 int main(int argc, char *argv[])
 {
     command_line_options *options = process_command_line_arguments(argc, argv);
-
-    if (options->flags & VERSION)
-    {
-        command_line_show_version();
-    }
 
     if (options->flags & CONTEXT_MODE && options->flags & UNIFIED_MODE)
     {
