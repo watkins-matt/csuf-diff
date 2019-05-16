@@ -55,6 +55,7 @@ void file_close(file *this)
 
 int file_find_line(file *this, const char *line, int start_limit, int end_limit)
 {
+    assert(start_limit >= 0);
     assert(end_limit <= this->line_count);
     for (int i = start_limit; i < end_limit; i++)
     {

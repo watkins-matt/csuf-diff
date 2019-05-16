@@ -2,6 +2,7 @@
 #define SIMILARITY_H
 
 #include "file.h"
+#include "diff.h"
 
 struct similarity
 {
@@ -17,6 +18,6 @@ similarity *similarity_create(int line_number, int total_lines_matched, int sour
 void similarity_destroy(similarity *this);
 int similarity_last_line(similarity *sim);
 int similarity_print(file *first, file *second, similarity *sim);
-void file_print_similarity(file *file, similarity *sim);
+void file_print_similarity(file *file, similarity *sim, COMMAND_FLAGS flags);
 
 #endif

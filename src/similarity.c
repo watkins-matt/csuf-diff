@@ -1,6 +1,7 @@
 #include "similarity.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 similarity *similarity_create_default()
 {
@@ -42,10 +43,34 @@ int similarity_print(file *first, file *second, similarity *sim)
     return sim->line_number + sim->total_lines_matched;
 }
 
-void file_print_similarity(file *file, similarity *sim)
+void file_print_similarity(file *file, similarity *sim, COMMAND_FLAGS flags)
 {
     for (int i = sim->line_number; i < sim->line_number + sim->total_lines_matched; i++)
     {
-        printf("%02d\t%s", i + 1, file->lines[i]);
+        char *line = strdup(file->lines[i]);
+        if (line[strlen(line) - 1] == '\n')
+        {
+            line[strlen(line) - 1] = '\0';
+        }
+
+        if (flags & SIDE_BY_SIDE)
+        {
+            if (flags & LEFT_COLUMN_ONLY)
+            {
+               printf("%38.38s\n", line); 
+            }
+
+            else
+            {
+                printf("%38.38s %38.38s\n", line, line); 
+            }
+        }
+
+        else
+        {
+            printf("%s\n", line);
+        }
+
+        free(line);
     }
 }

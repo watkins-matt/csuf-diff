@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "diff.h"
 #include "file.h"
 #include "similarity.h"
 #include "similarity_graph.h"
@@ -15,26 +16,6 @@ void print_seperator()
 {
     printf("===================================\n");
 }
-
-enum COMMAND_FLAGS
-{
-    NONE = 0,
-    VERSION = 1,     // -v --version
-    QUIET_MODE = 2,  // -q --brief
-    REPORT_SAME = 4, // -s Reports if files are the same
-    SIDE_BY_SIDE = 8,
-    LEFT_COLUMN_ONLY = 16,
-    SUPPRESS_COMMON_LINES = 32
-};
-typedef enum COMMAND_FLAGS COMMAND_FLAGS;
-
-struct command_line_options
-{
-    char *first_file;
-    char *second_file;
-    COMMAND_FLAGS flags;
-};
-typedef struct command_line_options command_line_options;
 
 command_line_options *command_line_options_create(const char *first_file, const char *second_file)
 {
@@ -160,14 +141,14 @@ void print_diff(file *first, file *second, COMMAND_FLAGS flags, similarity_graph
             if (sim_first)
             {
                 if (!(flags & SUPPRESS_COMMON_LINES))
-                    file_print_similarity(second, sim);
+                    file_print_similarity(second, sim, flags);
                 line_number += sim->total_lines_matched;
                 sim = sim->next;
             }
 
             else
             {
-                file_print_discrepancy(first, second, disc);
+                file_print_discrepancy(first, second, disc, line_number, flags);
                 line_number += disc->total_lines;
                 disc = disc->next;
             }
@@ -188,7 +169,7 @@ void print_diff(file *first, file *second, COMMAND_FLAGS flags, similarity_graph
         else if (disc == NULL)
         {
             if (!(flags & SUPPRESS_COMMON_LINES))
-                file_print_similarity(second, sim);
+                file_print_similarity(second, sim, flags);
             line_number += sim->total_lines_matched;
             sim = sim->next;
         }
@@ -196,7 +177,7 @@ void print_diff(file *first, file *second, COMMAND_FLAGS flags, similarity_graph
         // Only discrepancies left
         else if (sim == NULL)
         {
-            file_print_discrepancy(first, second, disc);
+            file_print_discrepancy(first, second, disc, line_number, flags);
             line_number += disc->total_lines;
             disc = disc->next;
         }
@@ -218,25 +199,24 @@ int main(int argc, char *argv[])
         command_line_show_version();
     }
 
+    if (options->flags & COMBINED_MODE && options->flags & UNIFIED_MODE)
+    {
+        printf("Cannot use both combined and unifed mode at the same time.\n");
+        command_line_show_usage_message();
+    }
+
     file *first = file_open(options->first_file);
     file *second = file_open(options->second_file);
 
-    command_line_options_destroy(options);
-
     similarity_graph *graph = generate_graph(first, second);
-
-    // Test code: do not use in production
-    // similarity_graph_print(first, second, graph);
-    // print_seperator();
     discrepancy_graph *discrepancy_graph = generate_discrepancy_graph(first, second, graph);
-    // discrepancy_graph_print(first, second, discrepancy_graph);
-    // print_seperator();
 
     print_diff(first, second, options->flags, graph, discrepancy_graph);
-
+    
+    // Clean everything up
+    command_line_options_destroy(options);
     discrepancy_graph_destroy(discrepancy_graph);
     similarity_graph_destroy(graph);
-
     file_close(first);
     file_close(second);
     return 0;
