@@ -10,7 +10,7 @@ enum COMMAND_FLAGS
     SIDE_BY_SIDE = 8,
     LEFT_COLUMN_ONLY = 16,
     SUPPRESS_COMMON_LINES = 32,
-    COMBINED_MODE = 64,
+    CONTEXT_MODE = 64,
     UNIFIED_MODE = 128
 };
 typedef enum COMMAND_FLAGS COMMAND_FLAGS;
@@ -20,6 +20,7 @@ struct command_line_options
     char *first_file;
     char *second_file;
     COMMAND_FLAGS flags;
+    int context_lines;
 };
 typedef struct command_line_options command_line_options;
 

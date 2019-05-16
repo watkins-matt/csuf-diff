@@ -50,7 +50,7 @@ void file_print_discrepancy(file *first, file *second, discrepancy *disc, int li
 
             else
             {
-                printf(">%s", second_line);
+                printf(">%s\n", second_line);
             }
             free(second_line);
         }
@@ -70,7 +70,7 @@ void file_print_discrepancy(file *first, file *second, discrepancy *disc, int li
 
             else
             {
-                printf("<%s", first_line);
+                printf("<%s\n", first_line);
             }
             free(first_line);
         }

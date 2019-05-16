@@ -23,6 +23,7 @@ command_line_options *command_line_options_create(const char *first_file, const 
     options->first_file = strdup(first_file);
     options->second_file = strdup(second_file);
     options->flags = 0;
+    options->context_lines = 3;
     return options;
 }
 
@@ -32,6 +33,7 @@ command_line_options *command_line_options_create_default()
     options->first_file = NULL;
     options->second_file = NULL;
     options->flags = 0;
+    options->context_lines = 3;
     return options;
 }
 
@@ -101,6 +103,30 @@ command_line_options *process_command_line_arguments(int argc, char *argv[])
             options->flags |= SUPPRESS_COMMON_LINES;
         }
 
+        else if (strcmpi(argument, "-c") == 0)
+        {
+            options->flags |= CONTEXT_MODE;
+            int next_arg_number = i+1;
+
+            // We have more arguments left, see if a number was specified
+            if (next_arg_number < argc-2)
+            {
+                int context = options->context_lines;
+                int result = sscanf(argv[i], "%d", &context);
+                // If there was not an error and the next 
+                // argument was a string then sscanf will return 1
+                if (result == 1)
+                {
+                    options->context_lines = context;
+                }
+            }
+        }
+
+        else if (strcmpi(argument, "-u") == 0)
+        {
+            options->flags |= UNIFIED_MODE;
+        }
+
         else
         {
             printf("Invalid argument: %s\n", argument);
@@ -125,6 +151,11 @@ void print_diff(file *first, file *second, COMMAND_FLAGS flags, similarity_graph
             printf("Files %s and %s are different.", first->file_name, second->file_name);
         }
         return;
+    }
+
+    if (flags & CONTEXT_MODE)
+    {
+
     }
 
     int line_number = 0;
@@ -199,7 +230,7 @@ int main(int argc, char *argv[])
         command_line_show_version();
     }
 
-    if (options->flags & COMBINED_MODE && options->flags & UNIFIED_MODE)
+    if (options->flags & CONTEXT_MODE && options->flags & UNIFIED_MODE)
     {
         printf("Cannot use both combined and unifed mode at the same time.\n");
         command_line_show_usage_message();
